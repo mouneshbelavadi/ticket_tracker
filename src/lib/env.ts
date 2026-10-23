@@ -31,7 +31,13 @@ export function getEnv(customSource?: Record<string, string | undefined>): Env {
     );
   }
 
-  const source = customSource ?? process.env;
+  const rawSource = customSource ?? process.env;
+  const source = {
+    ...rawSource,
+    SUPABASE_URL: rawSource.SUPABASE_URL || rawSource.NEXT_PUBLIC_SUPABASE_URL,
+    NOTIFY_EMAIL: rawSource.NOTIFY_EMAIL || rawSource.NOTIFICATION_EMAIL_TO,
+    APP_URL: rawSource.APP_URL || (rawSource.VERCEL_URL ? `https://${rawSource.VERCEL_URL}` : undefined),
+  };
   const result = envSchema.safeParse(source);
 
   if (!result.success) {
