@@ -1,0 +1,22 @@
+name: Backup Heartbeat Tick
+
+on:
+  schedule:
+    # Runs every ~5 minutes (avoiding top of the hour :00 which has highest traffic)
+    - cron: '2-59/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: heartbeat-tick
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger /api/tick
+        run: |
+          curl -fsS --max-time 25 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/tick"

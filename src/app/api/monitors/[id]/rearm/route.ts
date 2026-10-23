@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
+
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const db = getDb();
+
+    const { data, error } = await db
+      .from("monitors")
+      .update({
+        status: "active",
+        alert_sent_at: null,
+        alert_claimed_at: null,
+        last_state: "unknown",
+        consecutive_failures: 0,
+        trouble_notified_at: null,
+        next_check_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ monitor: data });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error re-arming monitor";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
